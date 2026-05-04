@@ -1,176 +1,145 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мессенджер</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f1923">
+<title>Мессенджер</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
-        body {
-            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #17212b;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+html,body{
+  height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:#0f1923;
+  color:#fff;
+}
 
-        .wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            max-width: 400px;
-            padding: 24px;
-        }
+.screen{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px 20px;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+}
 
-        .logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
+.logo{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-bottom:40px;
+}
 
-        .logo-circle {
-            width: 96px;
-            height: 96px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #2b5278, #4fa3e3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            box-shadow: 0 8px 32px rgba(79,163,227,0.35);
-        }
+.logo-circle{
+  width:100px;height:100px;
+  border-radius:50%;
+  background:linear-gradient(145deg,#1a8abf,#2ca5e0);
+  display:flex;align-items:center;justify-content:center;
+  font-size:52px;
+  margin-bottom:16px;
+  box-shadow:0 12px 40px rgba(44,165,224,.4);
+}
 
-        .logo h1 {
-            font-size: 26px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 0.3px;
-        }
+.logo h1{font-size:28px;font-weight:800;letter-spacing:.2px}
+.logo p{font-size:15px;color:#8898aa;margin-top:6px;text-align:center}
 
-        .logo p {
-            font-size: 15px;
-            color: #708599;
-            text-align: center;
-        }
+.card{
+  width:100%;max-width:400px;
+  background:#1a2633;
+  border-radius:20px;
+  padding:28px 24px;
+  box-shadow:0 8px 40px rgba(0,0,0,.5);
+}
 
-        .card {
-            background: #1e2c3a;
-            border-radius: 16px;
-            padding: 32px;
-            width: 100%;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
-        }
+.error-box{
+  background:rgba(229,57,53,.15);
+  border:1px solid rgba(229,57,53,.35);
+  color:#ef9a9a;
+  padding:12px 16px;
+  border-radius:10px;
+  font-size:14px;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;
+}
 
-        .error {
-            background: rgba(229,57,53,0.15);
-            border: 1px solid rgba(229,57,53,0.4);
-            color: #ef9a9a;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
+.field{margin-bottom:16px}
+.field label{
+  display:block;font-size:12px;font-weight:700;
+  color:#8898aa;text-transform:uppercase;letter-spacing:.7px;
+  margin-bottom:8px;
+}
+.field input{
+  width:100%;
+  padding:15px 16px;
+  background:#243447;
+  border:2px solid transparent;
+  border-radius:12px;
+  font-size:16px;  /* 16px — предотвращает зум на iOS */
+  color:#fff;
+  outline:none;
+  transition:border-color .2s;
+  -webkit-appearance:none;
+}
+.field input::placeholder{color:#4a6580}
+.field input:focus{border-color:#2ca5e0}
 
-        .form-group { margin-bottom: 16px; }
+.submit-btn{
+  width:100%;
+  padding:16px;
+  background:linear-gradient(135deg,#2ca5e0,#1a8abf);
+  color:#fff;border:none;border-radius:12px;
+  font-size:17px;font-weight:700;
+  cursor:pointer;margin-top:8px;
+  transition:opacity .2s,transform .1s;
+  -webkit-appearance:none;
+  box-shadow:0 4px 16px rgba(44,165,224,.35);
+}
+.submit-btn:active{opacity:.85;transform:scale(.98)}
 
-        label {
-            display: block;
-            font-size: 13px;
-            color: #708599;
-            margin-bottom: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px 16px;
-            background: #17212b;
-            border: 2px solid #2b3d50;
-            border-radius: 10px;
-            font-size: 16px;
-            color: #fff;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input::placeholder { color: #4a5568; }
-        input:focus { border-color: #4fa3e3; }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background: #4fa3e3;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            margin-top: 8px;
-            letter-spacing: 0.3px;
-        }
-
-        .btn:hover { background: #3d8ecf; }
-        .btn:active { transform: scale(0.98); }
-
-        .switch {
-            text-align: center;
-            font-size: 15px;
-            color: #708599;
-        }
-
-        .switch a {
-            color: #4fa3e3;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .switch a:hover { text-decoration: underline; }
-    </style>
+.switch{
+  text-align:center;margin-top:20px;
+  font-size:15px;color:#8898aa;
+}
+.switch a{color:#2ca5e0;font-weight:700;text-decoration:none}
+</style>
 </head>
 <body>
-    <div class="wrap">
-        <div class="logo">
-            <div class="logo-circle">💬</div>
-            <h1>Мессенджер</h1>
-            <p>{% if mode == 'register' %}Создайте аккаунт чтобы начать общение{% else %}Войдите чтобы продолжить{% endif %}</p>
-        </div>
+<div class="screen">
+  <div class="logo">
+    <div class="logo-circle">💬</div>
+    <h1>Мессенджер</h1>
+    <p>{% if mode=='register' %}Создайте аккаунт{% else %}Войдите в аккаунт{% endif %}</p>
+  </div>
 
-        <div class="card">
-            {% if error %}
-            <div class="error">⚠️ {{ error }}</div>
-            {% endif %}
+  <div class="card">
+    {% if error %}
+    <div class="error-box">⚠️ {{ error }}</div>
+    {% endif %}
 
-            <form method="POST">
-                <div class="form-group">
-                    <label>Имя пользователя</label>
-                    <input type="text" name="username" placeholder="Введите имя" required autofocus>
-                </div>
-                <div class="form-group">
-                    <label>Пароль</label>
-                    <input type="password" name="password" placeholder="Введите пароль" required>
-                </div>
-                <button type="submit" class="btn">
-                    {% if mode == 'register' %}Создать аккаунт{% else %}Войти{% endif %}
-                </button>
-            </form>
-        </div>
+    <form method="POST">
+      <div class="field">
+        <label>Имя пользователя</label>
+        <input type="text" name="username" placeholder="Введите имя" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <input type="password" name="password" placeholder="Введите пароль" autocomplete="{% if mode=='register' %}new-password{% else %}current-password{% endif %}" required>
+      </div>
+      <button type="submit" class="submit-btn">
+        {% if mode=='register' %}Создать аккаунт{% else %}Войти{% endif %}
+      </button>
+    </form>
+  </div>
 
-        <div class="switch">
-            {% if mode == 'register' %}
-                Уже есть аккаунт? <a href="/login">Войти</a>
-            {% else %}
-                Нет аккаунта? <a href="/register">Зарегистрироваться</a>
-            {% endif %}
-        </div>
-    </div>
+  <div class="switch">
+    {% if mode=='register' %}
+      Уже есть аккаунт? <a href="/login">Войти</a>
+    {% else %}
+      Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+    {% endif %}
+  </div>
+</div>
 </body>
 </html>
