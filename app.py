@@ -10,23 +10,20 @@ DATABASE = 'messenger.db'
 # ── База данных ──────────────────────────────────────────────────────────────
 
 def get_db():
-    """Открывает соединение с базой данных для текущего запроса."""
     if 'db' not in g:
         g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row  # чтобы получать словари вместо кортежей
+        g.db.row_factory = sqlite3.Row
     return g.db
 
 
 @app.teardown_appcontext
 def close_db(_error):
-    """Закрывает соединение после каждого запроса."""
     db = g.pop('db', None)
     if db is not None:
         db.close()
 
 
 def init_db():
-    """Создаёт таблицы если их нет."""
     db = sqlite3.connect(DATABASE)
     db.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -39,11 +36,17 @@ def init_db():
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             from_user TEXT NOT NULL,
-            to_user TEXT NOT NULL,
-            text TEXT NOT NULL,
-            time TEXT NOT NULL
+            to_user   TEXT NOT NULL,
+            text      TEXT NOT NULL DEFAULT '',
+            image     TEXT,
+            time      TEXT NOT NULL
         )
     ''')
+    # Добавляем колонку image если её нет (для уже существующих БД)
+    try:
+        db.execute('ALTER TABLE messages ADD COLUMN image TEXT')
+    except Exception:
+        pass
     db.commit()
     db.close()
 
@@ -63,7 +66,6 @@ def login():
     if request.method == 'POST':
         name = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-
         if not name or not password:
             error = 'Заполните все поля'
         else:
@@ -72,13 +74,11 @@ def login():
                 'SELECT * FROM users WHERE username = ? AND password = ?',
                 (name, password)
             ).fetchone()
-
             if user is None:
                 error = 'Неверное имя или пароль'
             else:
                 session['username'] = name
                 return redirect(url_for('chat'))
-
     return render_template('login.html', error=error, mode='login')
 
 
@@ -88,7 +88,6 @@ def register():
     if request.method == 'POST':
         name = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-
         if not name or not password:
             error = 'Заполните все поля'
         elif len(password) < 3:
@@ -98,18 +97,13 @@ def register():
             existing = db.execute(
                 'SELECT id FROM users WHERE username = ?', (name,)
             ).fetchone()
-
             if existing:
                 error = 'Такой пользователь уже существует'
             else:
-                db.execute(
-                    'INSERT INTO users (username, password) VALUES (?, ?)',
-                    (name, password)
-                )
+                db.execute('INSERT INTO users (username, password) VALUES (?, ?)', (name, password))
                 db.commit()
                 session['username'] = name
                 return redirect(url_for('chat'))
-
     return render_template('login.html', error=error, mode='register')
 
 
@@ -134,9 +128,7 @@ def api_contacts():
         return jsonify({'error': 'Не авторизован'}), 401
     me = session['username']
     db = get_db()
-    users = db.execute(
-        'SELECT username FROM users WHERE username != ?', (me,)
-    ).fetchall()
+    users = db.execute('SELECT username FROM users WHERE username != ?', (me,)).fetchall()
     return jsonify([u['username'] for u in users])
 
 
@@ -150,13 +142,19 @@ def api_messages():
         return jsonify([])
     db = get_db()
     msgs = db.execute(
-        '''SELECT from_user, to_user, text, time FROM messages
+        '''SELECT from_user, to_user, text, image, time FROM messages
            WHERE (from_user = ? AND to_user = ?)
               OR (from_user = ? AND to_user = ?)
            ORDER BY id ASC''',
         (me, with_user, with_user, me)
     ).fetchall()
-    return jsonify([{'from': m['from_user'], 'to': m['to_user'], 'text': m['text'], 'time': m['time']} for m in msgs])
+    return jsonify([{
+        'from':  m['from_user'],
+        'to':    m['to_user'],
+        'text':  m['text'],
+        'image': m['image'],
+        'time':  m['time']
+    } for m in msgs])
 
 
 @app.route('/api/send', methods=['POST'])
@@ -165,27 +163,28 @@ def api_send():
         return jsonify({'error': 'Не авторизован'}), 401
     me = session['username']
     data = request.get_json()
-    to = data.get('to', '').strip()
-    text = data.get('text', '').strip()
+    to    = data.get('to', '').strip()
+    text  = data.get('text', '').strip()
+    image = data.get('image')  # base64 строка или None
 
-    if not to or not text:
+    if not to or (not text and not image):
         return jsonify({'error': 'Пустое сообщение'}), 400
 
     db = get_db()
-    recipient = db.execute(
-        'SELECT id FROM users WHERE username = ?', (to,)
-    ).fetchone()
-
-    if not recipient:
+    if not db.execute('SELECT id FROM users WHERE username = ?', (to,)).fetchone():
         return jsonify({'error': 'Получатель не найден'}), 404
 
-    time = datetime.now().strftime('%H:%M')
+    # Ограничение размера картинки ~3 МБ в base64
+    if image and len(image) > 4_000_000:
+        return jsonify({'error': 'Картинка слишком большая (макс. 3 МБ)'}), 400
+
+    time_now = datetime.now().strftime('%H:%M')
     db.execute(
-        'INSERT INTO messages (from_user, to_user, text, time) VALUES (?, ?, ?, ?)',
-        (me, to, text, time)
+        'INSERT INTO messages (from_user, to_user, text, image, time) VALUES (?, ?, ?, ?, ?)',
+        (me, to, text, image, time_now)
     )
     db.commit()
-    return jsonify({'ok': True, 'message': {'from': me, 'to': to, 'text': text, 'time': time}})
+    return jsonify({'ok': True})
 
 
 if __name__ == '__main__':
@@ -193,5 +192,4 @@ if __name__ == '__main__':
     app.run(debug=True, port=5001)
 
 
-# Для Render.com — инициализируем базу при старте
 init_db()

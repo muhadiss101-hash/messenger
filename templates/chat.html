@@ -274,6 +274,84 @@
 
         .msg-wrap.out .bubble-meta { justify-content: flex-end; }
 
+        /* Превью выбранной картинки */
+        .img-preview-wrap {
+            display: none;
+            padding: 10px 16px 0;
+            background: #17212b;
+        }
+
+        .img-preview-inner {
+            position: relative;
+            display: inline-block;
+        }
+
+        .img-preview-inner img {
+            max-height: 120px;
+            max-width: 220px;
+            border-radius: 10px;
+            border: 2px solid #2b5278;
+        }
+
+        .img-preview-remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #e53935;
+            color: white;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        /* Картинка внутри пузырька */
+        .bubble img {
+            max-width: 260px;
+            max-height: 260px;
+            border-radius: 10px;
+            display: block;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        /* Полноэкранный просмотр */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox.open { display: flex; }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+
         /* Поле ввода */
         .input-wrap {
             display: none;
@@ -283,6 +361,24 @@
             gap: 10px;
             align-items: flex-end;
         }
+
+        .photo-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #1e2c3a;
+            border: none;
+            color: #708599;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .photo-btn:hover { background: #2b3d50; color: #4fa3e3; }
 
         .input-wrap textarea {
             flex: 1;
@@ -364,14 +460,30 @@
     <!-- Сообщения -->
     <div class="messages" id="messages"></div>
 
+    <!-- Превью фото -->
+    <div class="img-preview-wrap" id="imgPreviewWrap">
+        <div class="img-preview-inner">
+            <img id="imgPreview" src="" alt="">
+            <button class="img-preview-remove" onclick="removeImage()" title="Удалить">✕</button>
+        </div>
+    </div>
+
     <!-- Ввод -->
     <div class="input-wrap" id="inputWrap">
+        <button class="photo-btn" onclick="document.getElementById('fileInput').click()" title="Отправить фото">📎</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="onFileSelected(event)">
         <textarea id="msgInput" placeholder="Написать сообщение..." rows="1"></textarea>
         <button class="send-btn" onclick="send()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
                 <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
             </svg>
         </button>
+    </div>
+
+    <!-- Просмотр фото на весь экран -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close">✕</button>
+        <img id="lightboxImg" src="" alt="">
     </div>
 </div>
 
@@ -380,6 +492,7 @@
     let activeContact = null;
     let pollTimer = null;
     let allContacts = [];
+    let pendingImage = null; // base64 выбранного фото
 
     // ── Контакты ────────────────────────────────────────────────────────────
     function loadContacts() {
@@ -457,8 +570,17 @@
                     const isMe = msg.from === ME;
                     const wrap = document.createElement('div');
                     wrap.className = 'msg-wrap ' + (isMe ? 'out' : 'in');
+
+                    let content = '';
+                    if (msg.image) {
+                        content += `<img src="${msg.image}" alt="фото" onclick="openLightbox('${msg.image}')">`;
+                    }
+                    if (msg.text) {
+                        content += `<div>${escapeHtml(msg.text)}</div>`;
+                    }
+
                     wrap.innerHTML = `
-                        <div class="bubble">${escapeHtml(msg.text)}</div>
+                        <div class="bubble">${content}</div>
                         <div class="bubble-meta">
                             ${isMe ? '' : '<span>' + escapeHtml(msg.from) + '</span> · '}
                             <span>${msg.time}</span>
@@ -471,17 +593,70 @@
             });
     }
 
+    // ── Выбор фото ───────────────────────────────────────────────────────────
+    function onFileSelected(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5_000_000) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            // Сжимаем через canvas чтобы не перегружать базу
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX = 1024;
+                let w = img.width, h = img.height;
+                if (w > MAX || h > MAX) {
+                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                    else       { w = Math.round(w * MAX / h); h = MAX; }
+                }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                pendingImage = canvas.toDataURL('image/jpeg', 0.85);
+                document.getElementById('imgPreview').src = pendingImage;
+                document.getElementById('imgPreviewWrap').style.display = 'block';
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+        e.target.value = ''; // сбрасываем input чтобы можно было выбрать тот же файл снова
+    }
+
+    function removeImage() {
+        pendingImage = null;
+        document.getElementById('imgPreviewWrap').style.display = 'none';
+        document.getElementById('imgPreview').src = '';
+    }
+
+    // ── Просмотр фото ─────────────────────────────────────────────────────────
+    function openLightbox(src) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightbox').classList.add('open');
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('open');
+    }
+
     // ── Отправить ────────────────────────────────────────────────────────────
     function send() {
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
-        if (!text || !activeContact) return;
+        if (!text && !pendingImage || !activeContact) return;
+
+        const payload = { to: activeContact, text, image: pendingImage };
         fetch('/api/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: activeContact, text })
+            body: JSON.stringify(payload)
         }).then(r => r.json()).then(d => {
-            if (d.ok) { input.value = ''; input.style.height = 'auto'; loadMessages(); }
+            if (d.ok) {
+                input.value = '';
+                input.style.height = 'auto';
+                removeImage();
+                loadMessages();
+            }
         });
     }
 
