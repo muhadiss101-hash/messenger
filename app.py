@@ -145,13 +145,19 @@ def api_messages():
     if not with_user:
         return jsonify([])
     db = get_db()
-    msgs = db.execute(
-        '''SELECT from_user, to_user, text, image, time FROM messages
-           WHERE (from_user = ? AND to_user = ?)
-              OR (from_user = ? AND to_user = ?)
-           ORDER BY id ASC''',
-        (me, with_user, with_user, me)
-    ).fetchall()
+    # Общий чат — все сообщения адресованные группе
+    if with_user == '__group__':
+        msgs = db.execute(
+            'SELECT from_user, to_user, text, image, time FROM messages WHERE to_user=? ORDER BY id ASC',
+            ('__group__',)
+        ).fetchall()
+    else:
+        msgs = db.execute(
+            '''SELECT from_user, to_user, text, image, time FROM messages
+               WHERE (from_user=? AND to_user=?) OR (from_user=? AND to_user=?)
+               ORDER BY id ASC''',
+            (me, with_user, with_user, me)
+        ).fetchall()
     return jsonify([{
         'from':  m['from_user'],
         'to':    m['to_user'],
@@ -175,7 +181,8 @@ def api_send():
         return jsonify({'error': 'Пустое сообщение'}), 400
 
     db = get_db()
-    if not db.execute('SELECT id FROM users WHERE username = ?', (to,)).fetchone():
+    # Общий чат — получателя в таблице users нет, это нормально
+    if to != '__group__' and not db.execute('SELECT id FROM users WHERE username=?', (to,)).fetchone():
         return jsonify({'error': 'Получатель не найден'}), 404
 
     # Ограничение размера картинки ~3 МБ в base64
