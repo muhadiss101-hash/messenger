@@ -1,10 +1,14 @@
 import sqlite3
+from collections import defaultdict
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify, g
 from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'messenger-secret-key-2024'
 DATABASE = 'messenger.db'
+
+# Сигнальная очередь для WebRTC: { имя_пользователя: [сигнал, ...] }
+call_signals = defaultdict(list)
 
 
 # ── База данных ──────────────────────────────────────────────────────────────
@@ -185,6 +189,32 @@ def api_send():
     )
     db.commit()
     return jsonify({'ok': True})
+
+
+# ── WebRTC сигнализация ───────────────────────────────────────────────────────
+
+@app.route('/api/call/send', methods=['POST'])
+def call_send():
+    if 'username' not in session:
+        return jsonify({'error': 'Не авторизован'}), 401
+    me = session['username']
+    data = request.get_json()
+    to     = data.get('to', '').strip()
+    signal = data.get('signal')
+    if not to or not signal:
+        return jsonify({'error': 'Неверные данные'}), 400
+    signal['from'] = me
+    call_signals[to].append(signal)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/call/receive')
+def call_receive():
+    if 'username' not in session:
+        return jsonify({'error': 'Не авторизован'}), 401
+    me = session['username']
+    pending = call_signals.pop(me, [])
+    return jsonify(pending)
 
 
 if __name__ == '__main__':

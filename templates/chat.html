@@ -416,6 +416,155 @@
 
         .send-btn:hover { background: #3d8ecf; }
         .send-btn:active { transform: scale(0.92); }
+
+        /* ══ ЗВОНОК ══════════════════════════════════════════════════════════ */
+
+        /* Входящий звонок */
+        .incoming-call {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e2c3a;
+            border: 1px solid #2b5278;
+            border-radius: 16px;
+            padding: 20px 24px;
+            z-index: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            min-width: 280px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
+        }
+
+        .incoming-call.show { display: block; }
+
+        .incoming-title {
+            font-size: 13px;
+            color: #708599;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .incoming-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+
+        .incoming-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-accept, .btn-reject {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-accept { background: #43a047; color: #fff; }
+        .btn-reject { background: #e53935; color: #fff; }
+        .btn-accept:hover, .btn-reject:hover { opacity: 0.85; }
+
+        /* Экран активного звонка */
+        .call-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #0e1621;
+            z-index: 600;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .call-screen.show { display: flex; }
+
+        #remoteVideo {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #17212b;
+        }
+
+        #localVideo {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            width: 140px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #2b5278;
+            background: #1e2c3a;
+            z-index: 10;
+        }
+
+        .call-info {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .call-info-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .call-info-status {
+            font-size: 15px;
+            color: #aac9e8;
+            margin-top: 6px;
+        }
+
+        .call-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .ctrl-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .ctrl-btn:active { transform: scale(0.9); }
+        .ctrl-btn:hover { opacity: 0.85; }
+
+        .ctrl-btn.mute   { background: #2b3d50; color: #fff; }
+        .ctrl-btn.camera { background: #2b3d50; color: #fff; }
+        .ctrl-btn.hangup { background: #e53935; color: #fff; }
+        .ctrl-btn.off    { background: #e53935; }
     </style>
 </head>
 <body>
@@ -455,6 +604,8 @@
             <div class="chat-header-name" id="chatName"></div>
             <div class="chat-header-status">в сети</div>
         </div>
+        <button class="ctrl-btn camera" onclick="startCall()" title="Видеозвонок" style="width:40px;height:40px;font-size:18px;background:#1e2c3a;">📹</button>
+        <button class="ctrl-btn mute"   onclick="startCall(false)" title="Аудиозвонок" style="width:40px;height:40px;font-size:18px;background:#1e2c3a;">📞</button>
     </div>
 
     <!-- Сообщения -->
@@ -478,6 +629,33 @@
                 <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
             </svg>
         </button>
+    </div>
+
+    <!-- Входящий звонок -->
+    <div class="incoming-call" id="incomingCall">
+        <div class="incoming-title">📞 Входящий звонок</div>
+        <div class="incoming-name" id="incomingName"></div>
+        <div class="incoming-btns">
+            <button class="btn-accept" onclick="acceptCall()">✅ Принять</button>
+            <button class="btn-reject" onclick="rejectCall()">❌ Отклонить</button>
+        </div>
+    </div>
+
+    <!-- Экран звонка -->
+    <div class="call-screen" id="callScreen">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo"  autoplay playsinline muted></video>
+
+        <div class="call-info">
+            <div class="call-info-name" id="callInfoName"></div>
+            <div class="call-info-status" id="callInfoStatus">Соединение...</div>
+        </div>
+
+        <div class="call-controls">
+            <button class="ctrl-btn mute"   id="muteBtn"   onclick="toggleMute()"   title="Микрофон">🎤</button>
+            <button class="ctrl-btn camera" id="cameraBtn" onclick="toggleCamera()" title="Камера">📹</button>
+            <button class="ctrl-btn hangup" onclick="hangup()" title="Завершить">📵</button>
+        </div>
     </div>
 
     <!-- Просмотр фото на весь экран -->
@@ -677,6 +855,232 @@
 
     loadContacts();
     setInterval(loadContacts, 5000);
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // WebRTC — ЗВОНКИ
+    // ══════════════════════════════════════════════════════════════════════════
+
+    const STUN = { iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+    ]};
+
+    let pc            = null;   // RTCPeerConnection
+    let localStream   = null;   // поток с камеры/микрофона
+    let callTarget    = null;   // с кем звоним
+    let isVideoCall   = true;   // видео или только аудио
+    let isCaller      = false;  // мы звоним или нам звонят
+    let sigTimer      = null;   // таймер опроса сигналов
+    let callTimer     = null;   // таймер длительности звонка
+    let callSeconds   = 0;
+    let micMuted      = false;
+    let camOff        = false;
+    let pendingOffer  = null;   // сохранённый offer при входящем звонке
+
+    // ── Отправить сигнал собеседнику ─────────────────────────────────────────
+    function sendSig(signal) {
+        fetch('/api/call/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: callTarget, signal })
+        });
+    }
+
+    // ── Опрос входящих сигналов (раз в секунду) ──────────────────────────────
+    function startSigPolling() {
+        if (sigTimer) clearInterval(sigTimer);
+        sigTimer = setInterval(async () => {
+            const res = await fetch('/api/call/receive');
+            const sigs = await res.json();
+            for (const sig of sigs) await handleSignal(sig);
+        }, 1000);
+    }
+
+    function stopSigPolling() {
+        if (sigTimer) { clearInterval(sigTimer); sigTimer = null; }
+    }
+
+    // ── Обработка входящего сигнала ───────────────────────────────────────────
+    async function handleSignal(sig) {
+        switch (sig.type) {
+            case 'offer':
+                callTarget  = sig.from;
+                isVideoCall = sig.video;
+                pendingOffer = sig.sdp;
+                document.getElementById('incomingName').textContent = sig.from;
+                document.getElementById('incomingCall').classList.add('show');
+                break;
+
+            case 'answer':
+                if (pc) await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+                setCallStatus('Звонок идёт');
+                startCallTimer();
+                break;
+
+            case 'ice':
+                if (pc && sig.candidate) {
+                    try { await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)); } catch {}
+                }
+                break;
+
+            case 'reject':
+                endCall('Звонок отклонён');
+                break;
+
+            case 'hangup':
+                endCall('Звонок завершён');
+                break;
+        }
+    }
+
+    // ── Исходящий звонок ──────────────────────────────────────────────────────
+    async function startCall(video = true) {
+        if (!activeContact) return;
+        callTarget  = activeContact;
+        isVideoCall = video;
+        isCaller    = true;
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video });
+        } catch {
+            alert('Нет доступа к камере или микрофону'); return;
+        }
+
+        showCallScreen(callTarget);
+        setCallStatus('Звонок...');
+        document.getElementById('localVideo').srcObject = localStream;
+
+        pc = new RTCPeerConnection(STUN);
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+        pc.onicecandidate = e => {
+            if (e.candidate) sendSig({ type: 'ice', candidate: e.candidate });
+        };
+        pc.ontrack = e => {
+            document.getElementById('remoteVideo').srcObject = e.streams[0];
+        };
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'connected') {
+                setCallStatus('Звонок идёт');
+                startCallTimer();
+            }
+        };
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        sendSig({ type: 'offer', sdp: offer, video });
+        startSigPolling();
+    }
+
+    // ── Принять звонок ────────────────────────────────────────────────────────
+    async function acceptCall() {
+        document.getElementById('incomingCall').classList.remove('show');
+        isCaller = false;
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideoCall });
+        } catch {
+            alert('Нет доступа к камере или микрофону'); return;
+        }
+
+        showCallScreen(callTarget);
+        setCallStatus('Соединение...');
+        document.getElementById('localVideo').srcObject = localStream;
+
+        pc = new RTCPeerConnection(STUN);
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+        pc.onicecandidate = e => {
+            if (e.candidate) sendSig({ type: 'ice', candidate: e.candidate });
+        };
+        pc.ontrack = e => {
+            document.getElementById('remoteVideo').srcObject = e.streams[0];
+        };
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'connected') {
+                setCallStatus('Звонок идёт');
+                startCallTimer();
+            }
+        };
+
+        await pc.setRemoteDescription(new RTCSessionDescription(pendingOffer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendSig({ type: 'answer', sdp: answer });
+        startSigPolling();
+    }
+
+    // ── Отклонить звонок ──────────────────────────────────────────────────────
+    function rejectCall() {
+        sendSig({ type: 'reject' });
+        document.getElementById('incomingCall').classList.remove('show');
+        callTarget = null;
+    }
+
+    // ── Завершить звонок ──────────────────────────────────────────────────────
+    function hangup() {
+        sendSig({ type: 'hangup' });
+        endCall('');
+    }
+
+    function endCall(reason) {
+        stopSigPolling();
+        if (callTimer) { clearInterval(callTimer); callTimer = null; }
+        if (pc)          { pc.close(); pc = null; }
+        if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+        document.getElementById('callScreen').classList.remove('show');
+        document.getElementById('incomingCall').classList.remove('show');
+        document.getElementById('remoteVideo').srcObject = null;
+        document.getElementById('localVideo').srcObject  = null;
+        callTarget = null; callSeconds = 0; micMuted = false; camOff = false;
+        if (reason) setTimeout(() => alert(reason), 100);
+    }
+
+    // ── Управление во время звонка ────────────────────────────────────────────
+    function toggleMute() {
+        if (!localStream) return;
+        micMuted = !micMuted;
+        localStream.getAudioTracks().forEach(t => t.enabled = !micMuted);
+        document.getElementById('muteBtn').classList.toggle('off', micMuted);
+        document.getElementById('muteBtn').textContent = micMuted ? '🔇' : '🎤';
+    }
+
+    function toggleCamera() {
+        if (!localStream) return;
+        camOff = !camOff;
+        localStream.getVideoTracks().forEach(t => t.enabled = !camOff);
+        document.getElementById('cameraBtn').classList.toggle('off', camOff);
+        document.getElementById('cameraBtn').textContent = camOff ? '🚫' : '📹';
+    }
+
+    // ── Вспомогательные ───────────────────────────────────────────────────────
+    function showCallScreen(name) {
+        document.getElementById('callInfoName').textContent = name;
+        document.getElementById('callScreen').classList.add('show');
+    }
+
+    function setCallStatus(text) {
+        document.getElementById('callInfoStatus').textContent = text;
+    }
+
+    function startCallTimer() {
+        callSeconds = 0;
+        if (callTimer) clearInterval(callTimer);
+        callTimer = setInterval(() => {
+            callSeconds++;
+            const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+            const s = String(callSeconds % 60).padStart(2, '0');
+            setCallStatus(`${m}:${s}`);
+        }, 1000);
+    }
+
+    // Слушаем сигналы постоянно (для входящих звонков)
+    setInterval(async () => {
+        if (pc) return; // уже в звонке — свой таймер
+        const res = await fetch('/api/call/receive');
+        const sigs = await res.json();
+        for (const sig of sigs) await handleSignal(sig);
+    }, 2000);
 </script>
 </body>
 </html>
