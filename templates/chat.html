@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мессенджер</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #eef2fb;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Шапка ── */
+        .header {
+            background: #1a73e8;
+            color: white;
+            padding: 18px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+        }
+
+        .header-left {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 15px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover { background: rgba(255,255,255,0.28); }
+
+        /* ── Основная область ── */
+        .main { display: flex; flex: 1; overflow: hidden; }
+
+        /* ── Левая панель ── */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #dde6f8;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            padding: 20px 22px;
+            font-weight: 800;
+            color: #1a73e8;
+            font-size: 17px;
+            border-bottom: 1px solid #eef2fb;
+            background: #f6f9ff;
+        }
+
+        .contacts-list { flex: 1; overflow-y: auto; }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 22px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .contact-item:hover { background: #f0f5ff; }
+        .contact-item.active { background: #e3ecfd; }
+
+        .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #1a73e8;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .contact-name {
+            font-weight: 700;
+            font-size: 17px;
+            color: #222;
+        }
+
+        .no-contacts {
+            padding: 32px 22px;
+            color: #aaa;
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ── Правая панель ── */
+        .chat-area { flex: 1; display: flex; flex-direction: column; }
+
+        .chat-placeholder {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #bbb;
+            gap: 16px;
+        }
+
+        .chat-placeholder span { font-size: 72px; }
+        .chat-placeholder p { font-size: 18px; font-weight: 500; }
+
+        .chat-header {
+            display: none;
+            padding: 18px 28px;
+            background: white;
+            border-bottom: 1px solid #dde6f8;
+            font-weight: 800;
+            font-size: 18px;
+            color: #222;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        /* ── Сообщения ── */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 32px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 62%;
+            padding: 13px 18px;
+            border-radius: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .message.incoming {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .message.outgoing {
+            background: #1a73e8;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-meta {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.6;
+        }
+
+        .message.outgoing .message-meta { text-align: right; }
+
+        /* ── Поле ввода ── */
+        .input-area {
+            display: none;
+            padding: 20px 28px;
+            background: white;
+            border-top: 1px solid #dde6f8;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 15px 22px;
+            border: 2px solid #dde6f8;
+            border-radius: 32px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #f6f9ff;
+        }
+
+        .input-area input:focus {
+            border-color: #1a73e8;
+            background: white;
+        }
+
+        .send-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover { background: #1557b0; transform: scale(1.05); }
+        .send-btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">💬 Мессенджер</div>
+    <div class="header-right">
+        <span class="user-badge">👤 {{ current_user }}</span>
+        <a href="/logout" class="logout-btn">Выйти</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="sidebar">
+        <div class="sidebar-title">Контакты</div>
+        <div class="contacts-list" id="contactsList">
+            <div class="no-contacts">Загрузка...</div>
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-placeholder" id="placeholder">
+            <span>💬</span>
+            <p>Выберите контакт для начала общения</p>
+        </div>
+
+        <div class="chat-header" id="chatHeader">
+            <div class="avatar" id="chatAvatar"></div>
+            <span id="chatName"></span>
+        </div>
+
+        <div class="messages" id="messages"></div>
+
+        <div class="input-area" id="inputArea">
+            <input type="text" id="messageInput" placeholder="Напишите сообщение..." maxlength="500">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ME = "{{ current_user }}";
+    let activeContact = null;
+    let pollInterval = null;
+
+    function loadContacts() {
+        fetch('/api/contacts')
+            .then(r => r.json())
+            .then(contacts => {
+                const list = document.getElementById('contactsList');
+                if (contacts.length === 0) {
+                    list.innerHTML = '<div class="no-contacts">Нет других пользователей.<br>Попросите кого-то зарегистрироваться!</div>';
+                    return;
+                }
+                list.innerHTML = '';
+                contacts.forEach(name => {
+                    const item = document.createElement('div');
+                    item.className = 'contact-item' + (name === activeContact ? ' active' : '');
+                    item.dataset.name = name;
+                    item.innerHTML = `<div class="avatar">${name[0].toUpperCase()}</div><span class="contact-name">${name}</span>`;
+                    item.onclick = () => openChat(name);
+                    list.appendChild(item);
+                });
+            });
+    }
+
+    function openChat(name) {
+        activeContact = name;
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('chatHeader').style.display = 'flex';
+        document.getElementById('messages').style.display = 'flex';
+        document.getElementById('inputArea').style.display = 'flex';
+        document.getElementById('chatName').textContent = name;
+        document.getElementById('chatAvatar').textContent = name[0].toUpperCase();
+        document.querySelectorAll('.contact-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.name === name);
+        });
+        loadMessages();
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(loadMessages, 2000);
+        document.getElementById('messageInput').focus();
+    }
+
+    function loadMessages() {
+        if (!activeContact) return;
+        fetch('/api/messages?with=' + activeContact)
+            .then(r => r.json())
+            .then(msgs => {
+                const box = document.getElementById('messages');
+                const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 10;
+                box.innerHTML = '';
+                msgs.forEach(msg => {
+                    const isMe = msg.from === ME;
+                    const div = document.createElement('div');
+                    div.className = 'message ' + (isMe ? 'outgoing' : 'incoming');
+                    div.innerHTML = `<div>${escapeHtml(msg.text)}</div><div class="message-meta">${isMe ? '' : msg.from + ' · '}${msg.time}</div>`;
+                    box.appendChild(div);
+                });
+                if (atBottom) box.scrollTop = box.scrollHeight;
+            });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text || !activeContact) return;
+        fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: activeContact, text: text })
+        })
+        .then(r => r.json())
+        .then(data => { if (data.ok) { input.value = ''; loadMessages(); } });
+    }
+
+    document.getElementById('messageInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    function escapeHtml(text) {
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    loadContacts();
+    setInterval(loadContacts, 5000);
+</script>
+
+</body>
+</html>

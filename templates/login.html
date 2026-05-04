@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мессенджер — {% if mode == 'register' %}Регистрация{% else %}Вход{% endif %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 52px 48px;
+            width: 440px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .logo-icon { font-size: 64px; margin-bottom: 12px; }
+
+        .logo h1 {
+            font-size: 28px;
+            color: #1a73e8;
+            font-weight: 800;
+        }
+
+        .logo p {
+            color: #888;
+            font-size: 17px;
+            margin-top: 6px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            font-size: 15px;
+            color: #444;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 17px;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        input:focus { border-color: #1a73e8; }
+
+        .error {
+            background: #fff3f3;
+            border: 1px solid #ffcdd2;
+            color: #c62828;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 17px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn:hover { background: #1557b0; }
+
+        .switch {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 16px;
+            color: #888;
+        }
+
+        .switch a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .switch a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <div class="logo-icon">💬</div>
+            <h1>Мессенджер</h1>
+            <p>{% if mode == 'register' %}Создайте аккаунт{% else %}Войдите в аккаунт{% endif %}</p>
+        </div>
+
+        {% if error %}
+        <div class="error">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>Имя пользователя</label>
+                <input type="text" name="username" placeholder="Введите имя" required autofocus>
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password" placeholder="Введите пароль" required>
+            </div>
+            <button type="submit" class="btn">
+                {% if mode == 'register' %}Зарегистрироваться{% else %}Войти{% endif %}
+            </button>
+        </form>
+
+        <div class="switch">
+            {% if mode == 'register' %}
+                Уже есть аккаунт? <a href="/login">Войти</a>
+            {% else %}
+                Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
