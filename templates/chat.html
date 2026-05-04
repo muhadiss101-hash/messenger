@@ -45,6 +45,152 @@ body{
   overflow:hidden;
 }
 
+/* ── Нижняя навигация (мобильная) ────────────────────────────────────────── */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(56px + var(--safe-b));
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  z-index:300;
+  padding-bottom:var(--safe-b);
+}
+.bottom-nav-inner{
+  display:flex;height:56px;
+}
+.nav-tab{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;border:none;background:none;
+  color:var(--text2);font-size:10px;font-weight:600;
+  letter-spacing:.3px;text-transform:uppercase;
+  transition:color .15s;
+}
+.nav-tab .nav-icon{font-size:22px;line-height:1}
+.nav-tab.active{color:var(--accent)}
+
+/* ── Панель настроек ──────────────────────────────────────────────────────── */
+.settings-panel{
+  display:none;
+  flex-direction:column;
+  width:340px;min-width:340px;
+  background:var(--bg);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.settings-panel.visible{display:flex}
+
+.sp-header{
+  padding:calc(16px + var(--safe-t)) 16px 14px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  font-size:20px;font-weight:800;
+}
+
+.sp-section{padding:20px 16px 0}
+.sp-section-title{
+  font-size:12px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.7px;
+  margin-bottom:10px;
+}
+
+/* Профиль */
+.profile-card{
+  background:var(--surface);
+  border-radius:16px;padding:16px;
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:20px;
+}
+.profile-name{font-size:18px;font-weight:700}
+.profile-sub{font-size:13px;color:var(--text2);margin-top:3px}
+
+/* Строки настроек */
+.setting-row{
+  background:var(--surface);
+  border-radius:12px;
+  padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:background .15s;
+}
+.setting-row:active{background:var(--surface2)}
+.setting-row .s-icon{font-size:22px;width:36px;text-align:center}
+.setting-row .s-label{flex:1}
+.setting-row .s-title{font-size:15px;font-weight:600}
+.setting-row .s-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.setting-row .s-arrow{color:var(--text2);font-size:18px}
+
+/* Переключатель */
+.toggle-switch{
+  position:relative;width:50px;height:28px;flex-shrink:0;
+}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;inset:0;
+  background:var(--border);border-radius:14px;
+  transition:.25s;cursor:pointer;
+}
+.toggle-slider::before{
+  content:'';position:absolute;
+  width:22px;height:22px;border-radius:50%;
+  left:3px;top:3px;background:#fff;
+  transition:.25s;
+}
+.toggle-switch input:checked + .toggle-slider{background:var(--accent)}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(22px)}
+
+/* Тест устройств */
+.device-test{
+  background:var(--surface);
+  border-radius:12px;padding:16px;
+  margin-bottom:8px;
+}
+.device-test-title{font-size:14px;font-weight:600;margin-bottom:12px}
+.device-btns{display:flex;gap:8px;flex-wrap:wrap}
+.device-btn{
+  padding:8px 16px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);font-size:14px;
+  cursor:pointer;transition:background .15s;
+  display:flex;align-items:center;gap:6px;
+}
+.device-btn:active{background:var(--border)}
+.device-btn.active-green{background:rgba(76,217,100,.15);border-color:#4cd964;color:#4cd964}
+.device-btn.active-red{background:rgba(229,57,53,.15);border-color:var(--danger);color:var(--danger)}
+
+/* Уровень микрофона */
+.mic-level-wrap{margin-top:10px}
+.mic-level-bar{
+  height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:6px;
+}
+.mic-level-fill{
+  height:100%;background:var(--accent);border-radius:3px;
+  width:0%;transition:width .1s;
+}
+
+/* Видео превью */
+#camPreview{
+  width:100%;border-radius:10px;margin-top:10px;
+  background:#000;display:none;
+  max-height:160px;object-fit:cover;
+}
+
+/* Опасная зона */
+.danger-btn{
+  width:100%;padding:14px;
+  background:rgba(229,57,53,.12);
+  border:1px solid rgba(229,57,53,.3);
+  color:var(--danger);
+  border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;transition:background .15s;
+  margin-bottom:8px;
+}
+.danger-btn:active{background:rgba(229,57,53,.25)}
+
 /* ══════════════════════════════════════════════════════════════════════════════
    ПАНЕЛЬ КОНТАКТОВ
 ══════════════════════════════════════════════════════════════════════════════ */
@@ -447,21 +593,38 @@ body{
 
 /* ── Мобильная адаптация ───────────────────────────────────────────────────── */
 @media(max-width:680px){
+  .bottom-nav{display:block}
+
   .contacts-panel{
-    position:absolute;inset:0;width:100%;min-width:0;
+    position:absolute;top:0;left:0;right:0;
+    bottom:calc(56px + var(--safe-b));
+    width:100%;min-width:0;
     transform:translateX(0);
+  }
+  .settings-panel{
+    position:absolute;top:0;left:0;right:0;
+    bottom:calc(56px + var(--safe-b));
+    width:100%;min-width:0;
+    border-right:none;
   }
   .chat-panel{
     position:absolute;inset:0;width:100%;
     transform:translateX(100%);
   }
   .app.chat-open .contacts-panel{transform:translateX(-100%)}
+  .app.chat-open .settings-panel{transform:translateX(-100%)}
   .app.chat-open .chat-panel{transform:translateX(0)}
 
   .back-btn{display:flex !important}
   .cp-name{display:none}
-
   .bubble img{max-width:200px;max-height:200px}
+}
+
+@media(min-width:681px){
+  .settings-panel.visible{
+    width:340px;min-width:340px;
+  }
+  .contacts-panel.hidden{display:none}
 }
 </style>
 </head>
@@ -578,6 +741,95 @@ body{
     <button class="lb-close">✕</button>
     <img id="lbImg" src="" alt="">
   </div>
+
+  <!-- ══ ПАНЕЛЬ НАСТРОЕК ══════════════════════════════════════════════════ -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="sp-header">⚙️ Настройки</div>
+
+    <!-- Профиль -->
+    <div class="sp-section">
+      <div class="sp-section-title">Мой профиль</div>
+      <div class="profile-card">
+        <div id="spAvatar"></div>
+        <div>
+          <div class="profile-name">{{ current_user }}</div>
+          <div class="profile-sub">Онлайн</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Микрофон и камера -->
+    <div class="sp-section">
+      <div class="sp-section-title">Устройства</div>
+      <div class="device-test">
+        <div class="device-test-title">🎤 Микрофон</div>
+        <div class="device-btns">
+          <button class="device-btn" id="micTestBtn" onclick="testMic()">▶ Тест микрофона</button>
+          <button class="device-btn" id="micStopBtn" onclick="stopMicTest()" style="display:none">⏹ Остановить</button>
+        </div>
+        <div class="mic-level-wrap" id="micLevelWrap" style="display:none">
+          <div style="font-size:12px;color:var(--text2)">Уровень звука:</div>
+          <div class="mic-level-bar"><div class="mic-level-fill" id="micFill"></div></div>
+        </div>
+      </div>
+
+      <div class="device-test">
+        <div class="device-test-title">📹 Камера</div>
+        <div class="device-btns">
+          <button class="device-btn" id="camTestBtn" onclick="testCam()">▶ Тест камеры</button>
+          <button class="device-btn" id="camStopBtn" onclick="stopCamTest()" style="display:none">⏹ Остановить</button>
+        </div>
+        <video id="camPreview" autoplay playsinline muted></video>
+      </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div class="sp-section">
+      <div class="sp-section-title">Уведомления</div>
+      <div class="setting-row">
+        <div class="s-icon">🔔</div>
+        <div class="s-label">
+          <div class="s-title">Уведомления</div>
+          <div class="s-sub">Звук при новом сообщении</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifToggle" checked onchange="toggleNotif(this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- О приложении -->
+    <div class="sp-section">
+      <div class="sp-section-title">О приложении</div>
+      <div class="setting-row">
+        <div class="s-icon">💬</div>
+        <div class="s-label">
+          <div class="s-title">Мессенджер</div>
+          <div class="s-sub">Версия 1.0 — учебный проект</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Выход -->
+    <div class="sp-section" style="padding-bottom:20px;margin-top:12px">
+      <button class="danger-btn" onclick="location.href='/logout'">🚪 Выйти из аккаунта</button>
+    </div>
+  </div>
+
+  <!-- ══ НИЖНЯЯ НАВИГАЦИЯ ══════════════════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="nav-tab active" id="tabChats" onclick="switchTab('chats')">
+        <span class="nav-icon">💬</span>
+        <span>Чаты</span>
+      </button>
+      <button class="nav-tab" id="tabSettings" onclick="switchTab('settings')">
+        <span class="nav-icon">⚙️</span>
+        <span>Настройки</span>
+      </button>
+    </div>
+  </nav>
 
 </div><!-- .app -->
 
@@ -929,6 +1181,98 @@ setInterval(async () => {
 function esc(t) {
   return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// НАВИГАЦИЯ — переключение вкладок
+// ══════════════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  const chatsPanel    = document.getElementById('contactsPanel');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const tabChats      = document.getElementById('tabChats');
+  const tabSettings   = document.getElementById('tabSettings');
+
+  if (tab === 'chats') {
+    chatsPanel.style.display    = '';
+    settingsPanel.style.display = 'none';
+    tabChats.classList.add('active');
+    tabSettings.classList.remove('active');
+    stopMicTest(); stopCamTest();
+  } else {
+    chatsPanel.style.display    = 'none';
+    settingsPanel.style.display = 'flex';
+    tabChats.classList.remove('active');
+    tabSettings.classList.add('active');
+    // Инициализируем аватарку в настройках
+    const sp = document.getElementById('spAvatar');
+    sp.style.cssText = `width:56px;height:56px;border-radius:50%;background:${avatarColor(ME)};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:#fff;flex-shrink:0`;
+    sp.textContent = ME[0].toUpperCase();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ТЕСТ УСТРОЙСТВ
+// ══════════════════════════════════════════════════════════════════════════
+let micStream=null, micAnalyser=null, micAnimFrame=null;
+let camStream=null;
+let notifEnabled=true;
+
+async function testMic() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new AudioContext();
+    micAnalyser = ctx.createAnalyser();
+    ctx.createMediaStreamSource(micStream).connect(micAnalyser);
+    micAnalyser.fftSize = 256;
+    const data = new Uint8Array(micAnalyser.frequencyBinCount);
+
+    document.getElementById('micTestBtn').style.display = 'none';
+    document.getElementById('micStopBtn').style.display = '';
+    document.getElementById('micLevelWrap').style.display = 'block';
+    document.getElementById('micTestBtn').classList.add('active-green');
+
+    function draw() {
+      micAnimFrame = requestAnimationFrame(draw);
+      micAnalyser.getByteFrequencyData(data);
+      const avg = data.reduce((a,b) => a+b, 0) / data.length;
+      document.getElementById('micFill').style.width = Math.min(avg * 2, 100) + '%';
+    }
+    draw();
+  } catch {
+    alert('Нет доступа к микрофону. Разрешите доступ в настройках браузера.');
+  }
+}
+
+function stopMicTest() {
+  if (micAnimFrame) { cancelAnimationFrame(micAnimFrame); micAnimFrame=null; }
+  micStream?.getTracks().forEach(t => t.stop()); micStream=null;
+  document.getElementById('micTestBtn').style.display = '';
+  document.getElementById('micStopBtn').style.display = 'none';
+  document.getElementById('micLevelWrap').style.display = 'none';
+  document.getElementById('micFill').style.width = '0%';
+}
+
+async function testCam() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const vid = document.getElementById('camPreview');
+    vid.srcObject = camStream;
+    vid.style.display = 'block';
+    document.getElementById('camTestBtn').style.display = 'none';
+    document.getElementById('camStopBtn').style.display = '';
+  } catch {
+    alert('Нет доступа к камере. Разрешите доступ в настройках браузера.');
+  }
+}
+
+function stopCamTest() {
+  camStream?.getTracks().forEach(t => t.stop()); camStream=null;
+  const vid = document.getElementById('camPreview');
+  vid.srcObject=null; vid.style.display='none';
+  document.getElementById('camTestBtn').style.display = '';
+  document.getElementById('camStopBtn').style.display = 'none';
+}
+
+function toggleNotif(el) { notifEnabled = el.checked; }
 
 // ── Старт ─────────────────────────────────────────────────────────────────
 loadContacts();
