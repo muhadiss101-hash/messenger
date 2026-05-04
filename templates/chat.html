@@ -2,367 +2,506 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мессенджер</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #eef2fb;
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #17212b;
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* ── Шапка ── */
-        .header {
-            background: #1a73e8;
-            color: white;
-            padding: 18px 28px;
+        /* ══ ЛЕВАЯ ПАНЕЛЬ ══════════════════════════════════════════════════ */
+        .sidebar {
+            width: 340px;
+            min-width: 340px;
+            background: #17212b;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #0e1621;
+        }
+
+        /* Шапка сайдбара */
+        .sidebar-header {
+            padding: 16px 16px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            background: #17212b;
         }
 
-        .header-left {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
+        .app-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
         }
 
-        .header-right {
+        .current-user {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 8px;
+            color: #708599;
+            font-size: 14px;
         }
 
-        .user-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 18px;
-            border-radius: 24px;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.5);
-            color: white;
-            padding: 8px 18px;
-            border-radius: 24px;
-            cursor: pointer;
-            font-size: 15px;
+        .logout-link {
+            color: #4fa3e3;
             text-decoration: none;
-            font-weight: 600;
-            transition: background 0.2s;
+            font-size: 13px;
+            padding: 4px 10px;
+            border: 1px solid #2b3d50;
+            border-radius: 6px;
+            transition: background 0.15s;
         }
 
-        .logout-btn:hover { background: rgba(255,255,255,0.28); }
+        .logout-link:hover { background: #1e2c3a; }
 
-        /* ── Основная область ── */
-        .main { display: flex; flex: 1; overflow: hidden; }
-
-        /* ── Левая панель ── */
-        .sidebar {
-            width: 320px;
-            background: white;
-            border-right: 1px solid #dde6f8;
-            display: flex;
-            flex-direction: column;
+        /* Поиск */
+        .search-wrap {
+            padding: 8px 12px 12px;
         }
 
-        .sidebar-title {
-            padding: 20px 22px;
-            font-weight: 800;
-            color: #1a73e8;
-            font-size: 17px;
-            border-bottom: 1px solid #eef2fb;
-            background: #f6f9ff;
+        .search-wrap input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            background: #1e2c3a;
+            border: none;
+            border-radius: 22px;
+            font-size: 15px;
+            color: #fff;
+            outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23708599' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px center;
         }
 
-        .contacts-list { flex: 1; overflow-y: auto; }
+        .search-wrap input::placeholder { color: #708599; }
 
-        .contact-item {
+        /* Список контактов */
+        .contacts { flex: 1; overflow-y: auto; }
+
+        .contacts::-webkit-scrollbar { width: 4px; }
+        .contacts::-webkit-scrollbar-thumb { background: #2b3d50; border-radius: 2px; }
+
+        .contact {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 18px 22px;
+            gap: 12px;
+            padding: 10px 16px;
             cursor: pointer;
             transition: background 0.15s;
-            border-bottom: 1px solid #f0f4ff;
+            border-radius: 0;
         }
 
-        .contact-item:hover { background: #f0f5ff; }
-        .contact-item.active { background: #e3ecfd; }
+        .contact:hover { background: #1e2c3a; }
+        .contact.active { background: #2b5278; }
 
         .avatar {
             width: 52px;
             height: 52px;
             border-radius: 50%;
-            background: #1a73e8;
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
+            font-weight: 700;
             font-size: 20px;
+            color: #fff;
             flex-shrink: 0;
+            background: linear-gradient(135deg, #2b5278, #4fa3e3);
         }
 
+        .contact-info { flex: 1; min-width: 0; }
+
         .contact-name {
-            font-weight: 700;
-            font-size: 17px;
-            color: #222;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contact-hint {
+            font-size: 14px;
+            color: #708599;
+            margin-top: 2px;
         }
 
         .no-contacts {
-            padding: 32px 22px;
-            color: #aaa;
-            font-size: 16px;
+            padding: 32px 20px;
             text-align: center;
+            color: #708599;
+            font-size: 15px;
             line-height: 1.6;
         }
 
-        /* ── Правая панель ── */
-        .chat-area { flex: 1; display: flex; flex-direction: column; }
+        /* ══ ПРАВАЯ ПАНЕЛЬ ═════════════════════════════════════════════════ */
+        .chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0e1621;
+        }
 
-        .chat-placeholder {
+        /* Заглушка */
+        .placeholder {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #bbb;
             gap: 16px;
+            color: #708599;
         }
 
-        .chat-placeholder span { font-size: 72px; }
-        .chat-placeholder p { font-size: 18px; font-weight: 500; }
+        .placeholder-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #1e2c3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+        }
 
+        .placeholder p {
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .placeholder small {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Заголовок чата */
         .chat-header {
             display: none;
-            padding: 18px 28px;
-            background: white;
-            border-bottom: 1px solid #dde6f8;
-            font-weight: 800;
-            font-size: 18px;
-            color: #222;
+            padding: 12px 20px;
+            background: #17212b;
+            border-bottom: 1px solid #0e1621;
             align-items: center;
-            gap: 16px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            gap: 14px;
         }
 
-        /* ── Сообщения ── */
+        .chat-header-info { flex: 1; }
+
+        .chat-header-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .chat-header-status {
+            font-size: 13px;
+            color: #4fa3e3;
+            margin-top: 1px;
+        }
+
+        /* Сообщения */
         .messages {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 32px;
+            padding: 20px 20px 12px;
             display: none;
             flex-direction: column;
-            gap: 10px;
+            gap: 4px;
+            background-image: radial-gradient(#1e2c3a 1px, transparent 1px);
+            background-size: 32px 32px;
         }
 
-        .message {
-            max-width: 62%;
-            padding: 13px 18px;
-            border-radius: 20px;
-            font-size: 16px;
+        .messages::-webkit-scrollbar { width: 4px; }
+        .messages::-webkit-scrollbar-thumb { background: #2b3d50; border-radius: 2px; }
+
+        /* Дата-разделитель */
+        .date-divider {
+            text-align: center;
+            color: #708599;
+            font-size: 13px;
+            margin: 8px 0;
+        }
+
+        .date-divider span {
+            background: rgba(14,22,33,0.8);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        /* Пузырьки сообщений */
+        .msg-wrap {
+            display: flex;
+            flex-direction: column;
+            max-width: 68%;
+        }
+
+        .msg-wrap.out { align-self: flex-end; align-items: flex-end; }
+        .msg-wrap.in  { align-self: flex-start; align-items: flex-start; }
+
+        .bubble {
+            padding: 8px 12px;
+            border-radius: 16px;
+            font-size: 15px;
             line-height: 1.5;
+            position: relative;
+            word-break: break-word;
         }
 
-        .message.incoming {
-            background: white;
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        .msg-wrap.out .bubble {
+            background: #2b5278;
+            color: #fff;
+            border-bottom-right-radius: 4px;
         }
 
-        .message.outgoing {
-            background: #1a73e8;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
+        .msg-wrap.in .bubble {
+            background: #1e2c3a;
+            color: #e8f0fb;
+            border-bottom-left-radius: 4px;
         }
 
-        .message-meta {
+        .bubble-meta {
             font-size: 12px;
-            margin-top: 5px;
-            opacity: 0.6;
-        }
-
-        .message.outgoing .message-meta { text-align: right; }
-
-        /* ── Поле ввода ── */
-        .input-area {
-            display: none;
-            padding: 20px 28px;
-            background: white;
-            border-top: 1px solid #dde6f8;
-            gap: 12px;
+            margin-top: 4px;
+            color: #708599;
+            display: flex;
             align-items: center;
+            gap: 4px;
         }
 
-        .input-area input {
+        .msg-wrap.out .bubble-meta { justify-content: flex-end; }
+
+        /* Поле ввода */
+        .input-wrap {
+            display: none;
+            padding: 12px 16px;
+            background: #17212b;
+            border-top: 1px solid #0e1621;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-wrap textarea {
             flex: 1;
-            padding: 15px 22px;
-            border: 2px solid #dde6f8;
-            border-radius: 32px;
+            padding: 12px 16px;
+            background: #1e2c3a;
+            border: none;
+            border-radius: 22px;
             font-size: 16px;
+            color: #fff;
             outline: none;
-            transition: border-color 0.2s;
-            background: #f6f9ff;
+            resize: none;
+            max-height: 120px;
+            min-height: 48px;
+            line-height: 1.4;
+            font-family: inherit;
         }
 
-        .input-area input:focus {
-            border-color: #1a73e8;
-            background: white;
-        }
+        .input-wrap textarea::placeholder { color: #708599; }
 
         .send-btn {
-            background: #1a73e8;
-            color: white;
-            border: none;
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
+            background: #4fa3e3;
+            border: none;
+            color: white;
             font-size: 20px;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background 0.2s, transform 0.1s;
             flex-shrink: 0;
         }
 
-        .send-btn:hover { background: #1557b0; transform: scale(1.05); }
-        .send-btn:active { transform: scale(0.95); }
+        .send-btn:hover { background: #3d8ecf; }
+        .send-btn:active { transform: scale(0.92); }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="header-left">💬 Мессенджер</div>
-    <div class="header-right">
-        <span class="user-badge">👤 {{ current_user }}</span>
-        <a href="/logout" class="logout-btn">Выйти</a>
+<!-- ══ САЙДБАР ══════════════════════════════════════════════════════════════ -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <span class="app-title">💬 Мессенджер</span>
+        <div class="current-user">
+            <span>{{ current_user }}</span>
+            <a href="/logout" class="logout-link">Выйти</a>
+        </div>
+    </div>
+
+    <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Поиск" oninput="filterContacts(this.value)">
+    </div>
+
+    <div class="contacts" id="contacts">
+        <div class="no-contacts">Загрузка...</div>
     </div>
 </div>
 
-<div class="main">
-    <div class="sidebar">
-        <div class="sidebar-title">Контакты</div>
-        <div class="contacts-list" id="contactsList">
-            <div class="no-contacts">Загрузка...</div>
+<!-- ══ ЧАТ ══════════════════════════════════════════════════════════════════ -->
+<div class="chat">
+    <!-- Заглушка -->
+    <div class="placeholder" id="placeholder">
+        <div class="placeholder-icon">💬</div>
+        <p>Выберите чат</p>
+        <small>Нажмите на контакт слева чтобы начать общение</small>
+    </div>
+
+    <!-- Заголовок -->
+    <div class="chat-header" id="chatHeader">
+        <div class="avatar" id="chatAvatar"></div>
+        <div class="chat-header-info">
+            <div class="chat-header-name" id="chatName"></div>
+            <div class="chat-header-status">в сети</div>
         </div>
     </div>
 
-    <div class="chat-area">
-        <div class="chat-placeholder" id="placeholder">
-            <span>💬</span>
-            <p>Выберите контакт для начала общения</p>
-        </div>
+    <!-- Сообщения -->
+    <div class="messages" id="messages"></div>
 
-        <div class="chat-header" id="chatHeader">
-            <div class="avatar" id="chatAvatar"></div>
-            <span id="chatName"></span>
-        </div>
-
-        <div class="messages" id="messages"></div>
-
-        <div class="input-area" id="inputArea">
-            <input type="text" id="messageInput" placeholder="Напишите сообщение..." maxlength="500">
-            <button class="send-btn" onclick="sendMessage()">➤</button>
-        </div>
+    <!-- Ввод -->
+    <div class="input-wrap" id="inputWrap">
+        <textarea id="msgInput" placeholder="Написать сообщение..." rows="1"></textarea>
+        <button class="send-btn" onclick="send()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+            </svg>
+        </button>
     </div>
 </div>
 
 <script>
     const ME = "{{ current_user }}";
     let activeContact = null;
-    let pollInterval = null;
+    let pollTimer = null;
+    let allContacts = [];
 
+    // ── Контакты ────────────────────────────────────────────────────────────
     function loadContacts() {
-        fetch('/api/contacts')
-            .then(r => r.json())
-            .then(contacts => {
-                const list = document.getElementById('contactsList');
-                if (contacts.length === 0) {
-                    list.innerHTML = '<div class="no-contacts">Нет других пользователей.<br>Попросите кого-то зарегистрироваться!</div>';
-                    return;
-                }
-                list.innerHTML = '';
-                contacts.forEach(name => {
-                    const item = document.createElement('div');
-                    item.className = 'contact-item' + (name === activeContact ? ' active' : '');
-                    item.dataset.name = name;
-                    item.innerHTML = `<div class="avatar">${name[0].toUpperCase()}</div><span class="contact-name">${name}</span>`;
-                    item.onclick = () => openChat(name);
-                    list.appendChild(item);
-                });
-            });
+        fetch('/api/contacts').then(r => r.json()).then(list => {
+            allContacts = list;
+            renderContacts(list);
+        });
     }
 
+    function renderContacts(list) {
+        const box = document.getElementById('contacts');
+        if (list.length === 0) {
+            box.innerHTML = '<div class="no-contacts">Нет других пользователей.<br>Попросите кого-то зарегистрироваться!</div>';
+            return;
+        }
+        box.innerHTML = '';
+        list.forEach(name => {
+            const el = document.createElement('div');
+            el.className = 'contact' + (name === activeContact ? ' active' : '');
+            el.dataset.name = name;
+            el.innerHTML = `
+                <div class="avatar">${name[0].toUpperCase()}</div>
+                <div class="contact-info">
+                    <div class="contact-name">${name}</div>
+                    <div class="contact-hint">нажмите чтобы открыть чат</div>
+                </div>`;
+            el.onclick = () => openChat(name);
+            box.appendChild(el);
+        });
+    }
+
+    function filterContacts(q) {
+        const filtered = q ? allContacts.filter(n => n.toLowerCase().includes(q.toLowerCase())) : allContacts;
+        renderContacts(filtered);
+    }
+
+    // ── Открыть чат ─────────────────────────────────────────────────────────
     function openChat(name) {
         activeContact = name;
         document.getElementById('placeholder').style.display = 'none';
         document.getElementById('chatHeader').style.display = 'flex';
         document.getElementById('messages').style.display = 'flex';
-        document.getElementById('inputArea').style.display = 'flex';
+        document.getElementById('inputWrap').style.display = 'flex';
         document.getElementById('chatName').textContent = name;
         document.getElementById('chatAvatar').textContent = name[0].toUpperCase();
-        document.querySelectorAll('.contact-item').forEach(el => {
-            el.classList.toggle('active', el.dataset.name === name);
-        });
+
+        document.querySelectorAll('.contact').forEach(el =>
+            el.classList.toggle('active', el.dataset.name === name)
+        );
+
         loadMessages();
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(loadMessages, 2000);
-        document.getElementById('messageInput').focus();
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(loadMessages, 2000);
+        document.getElementById('msgInput').focus();
     }
 
+    // ── Сообщения ────────────────────────────────────────────────────────────
     function loadMessages() {
         if (!activeContact) return;
-        fetch('/api/messages?with=' + activeContact)
+        fetch('/api/messages?with=' + encodeURIComponent(activeContact))
             .then(r => r.json())
             .then(msgs => {
                 const box = document.getElementById('messages');
-                const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 10;
+                const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 40;
                 box.innerHTML = '';
+
+                if (msgs.length === 0) {
+                    box.innerHTML = '<div style="text-align:center;color:#708599;font-size:14px;margin-top:40px">Нет сообщений. Начните общение!</div>';
+                    return;
+                }
+
+                box.innerHTML = '<div class="date-divider"><span>Сегодня</span></div>';
+
                 msgs.forEach(msg => {
                     const isMe = msg.from === ME;
-                    const div = document.createElement('div');
-                    div.className = 'message ' + (isMe ? 'outgoing' : 'incoming');
-                    div.innerHTML = `<div>${escapeHtml(msg.text)}</div><div class="message-meta">${isMe ? '' : msg.from + ' · '}${msg.time}</div>`;
-                    box.appendChild(div);
+                    const wrap = document.createElement('div');
+                    wrap.className = 'msg-wrap ' + (isMe ? 'out' : 'in');
+                    wrap.innerHTML = `
+                        <div class="bubble">${escapeHtml(msg.text)}</div>
+                        <div class="bubble-meta">
+                            ${isMe ? '' : '<span>' + escapeHtml(msg.from) + '</span> · '}
+                            <span>${msg.time}</span>
+                            ${isMe ? '<span>✓✓</span>' : ''}
+                        </div>`;
+                    box.appendChild(wrap);
                 });
+
                 if (atBottom) box.scrollTop = box.scrollHeight;
             });
     }
 
-    function sendMessage() {
-        const input = document.getElementById('messageInput');
+    // ── Отправить ────────────────────────────────────────────────────────────
+    function send() {
+        const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if (!text || !activeContact) return;
         fetch('/api/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: activeContact, text: text })
-        })
-        .then(r => r.json())
-        .then(data => { if (data.ok) { input.value = ''; loadMessages(); } });
+            body: JSON.stringify({ to: activeContact, text })
+        }).then(r => r.json()).then(d => {
+            if (d.ok) { input.value = ''; input.style.height = 'auto'; loadMessages(); }
+        });
     }
 
-    document.getElementById('messageInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter') sendMessage();
+    // Enter отправляет, Shift+Enter — новая строка
+    document.getElementById('msgInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
     });
 
-    function escapeHtml(text) {
-        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    // Авто-высота textarea
+    document.getElementById('msgInput').addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    function escapeHtml(t) {
+        return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     loadContacts();
     setInterval(loadContacts, 5000);
 </script>
-
 </body>
 </html>

@@ -156,7 +156,7 @@ def api_messages():
            ORDER BY id ASC''',
         (me, with_user, with_user, me)
     ).fetchall()
-    return jsonify([dict(m) for m in msgs])
+    return jsonify([{'from': m['from_user'], 'to': m['to_user'], 'text': m['text'], 'time': m['time']} for m in msgs])
 
 
 @app.route('/api/send', methods=['POST'])
